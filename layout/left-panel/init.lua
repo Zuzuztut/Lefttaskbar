@@ -3,7 +3,10 @@ local beautiful = require('beautiful')
 local wibox = require('wibox')
 local apps = require('configuration.apps')
 local dpi = require('beautiful').xresources.apply_dpi
-
+local gears =  require("gears")
+local math, string, tag, tonumber, type, os = math, string, tag, tonumber, type, os
+local my_table = awful.util.table or gears.table -- 4.{0,1} compatibility
+local s =  awful.screen.focused()
 local left_panel = function(screen)
   local action_bar_width = dpi(48)
   local panel_content_width = dpi(400)
@@ -80,6 +83,32 @@ local left_panel = function(screen)
       closePanel()
     end
   end
+
+s.docktimer = gears.timer{ timeout = 2 }
+    s.docktimer:connect_signal("timeout", function()
+        local s = awful.screen.focused()
+        panel.width = dpi(0)
+        if s.docktimer.started then
+            s.docktimer:stop()
+        end
+    end)
+    tag.connect_signal("property::selected", function(t)
+        local s = awful.screen.focused()
+        panel.width = action_bar_width
+        if not s.docktimer.started then
+            s.docktimer:start()
+        end
+    end)
+
+    panel:connect_signal("mouse::leave", function()
+        local s = awful.screen.focused()
+        panel.width = dpi(0)
+    end)
+
+    panel:connect_signal("mouse::enter", function()
+        local s = awful.screen.focused()
+        panel.width = action_bar_width
+    end)
 
   backdrop:buttons(
     awful.util.table.join(
